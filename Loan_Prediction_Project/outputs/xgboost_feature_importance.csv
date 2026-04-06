@@ -1,0 +1,17 @@
+Feature,Importance
+LoanTerm,0.19122267
+NumCreditLines,0.15438917
+LoanPurpose,0.14720637
+EmploymentType,0.1248213
+Education,0.119204484
+MaritalStatus,0.06198602
+Age,0.05191538
+InterestRate,0.03225679
+MonthsEmployed,0.021008104
+HasCoSigner,0.019117149
+Income,0.01855748
+LoanAmount,0.018293012
+HasDependents,0.014522831
+HasMortgage,0.0113146845
+DTIRatio,0.008456469
+CreditScore,0.0057280594

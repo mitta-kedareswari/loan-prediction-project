@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LoanIQ — Loan Approval Prediction System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,300&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy:      #0a1628;
+      --navy-mid:  #112240;
+      --navy-soft: #1a3a6b;
+      --teal:      #00c9a7;
+      --teal-dark: #00a88a;
+      --teal-glow: rgba(0,201,167,0.18);
+      --sky:       #4fc3f7;
+      --white:     #ffffff;
+      --off-white: #f4f7fb;
+      --slate:     #8892a4;
+      --text:      #1e293b;
+      --text-muted:#64748b;
+      --border:    #e2e8f0;
+      --card:      #ffffff;
+      --approved:  #00c9a7;
+      --rejected:  #ef4444;
+      --warn:      #f59e0b;
+      --radius:    14px;
+      --shadow:    0 4px 24px rgba(10,22,40,0.10);
+      --shadow-lg: 0 12px 48px rgba(10,22,40,0.16);
+    }
+
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--off-white);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ───── NAV ───── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(255,255,255,0.88);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 40px; height: 64px;
+    }
+    .nav-logo {
+      display: flex; align-items: center; gap: 10px;
+      font-family: 'Playfair Display', serif;
+      font-size: 1.35rem; font-weight: 700; color: var(--navy);
+    }
+    .nav-logo svg { width: 28px; height: 28px; }
+    .logo-dot { color: var(--teal); }
+    .nav-links { display: flex; gap: 8px; }
+    .nav-btn {
+      background: none; border: none; cursor: pointer;
+      font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 500;
+      color: var(--text-muted); padding: 8px 16px; border-radius: 8px;
+      transition: all 0.2s;
+    }
+    .nav-btn:hover, .nav-btn.active { color: var(--navy); background: var(--teal-glow); }
+    .nav-btn.active { color: var(--teal-dark); font-weight: 600; }
+
+    /* ───── PAGES ───── */
+    .page { display: none; animation: fadeUp 0.45s ease forwards; }
+    .page.active { display: block; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ───── HOME PAGE ───── */
+    #page-home { padding-top: 64px; }
+
+    .hero {
+      min-height: 92vh;
+      background: linear-gradient(135deg, var(--navy) 0%, var(--navy-mid) 55%, #0d2d5e 100%);
+      position: relative; overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .hero-grid {
+      position: absolute; inset: 0; opacity: 0.06;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px);
+      background-size: 60px 60px;
+    }
+    .hero-circle-1 {
+      position: absolute; width: 520px; height: 520px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(0,201,167,0.14) 0%, transparent 70%);
+      top: -100px; right: -80px; pointer-events: none;
+    }
+    .hero-circle-2 {
+      position: absolute; width: 360px; height: 360px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(79,195,247,0.10) 0%, transparent 70%);
+      bottom: 40px; left: -60px; pointer-events: none;
+    }
+    .hero-content {
+      position: relative; z-index: 2;
+      max-width: 780px; text-align: center; padding: 60px 32px;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(0,201,167,0.15); border: 1px solid rgba(0,201,167,0.4);
+      color: var(--teal); font-size: 0.82rem; font-weight: 600; letter-spacing: 0.06em;
+      text-transform: uppercase; padding: 6px 16px; border-radius: 40px;
+      margin-bottom: 28px;
+    }
+    .hero-badge span { width: 6px; height: 6px; background: var(--teal); border-radius: 50%; display: inline-block; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.4)} }
+    .hero-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2.4rem, 5vw, 3.8rem);
+      font-weight: 700; color: var(--white);
+      line-height: 1.18; margin-bottom: 22px;
+    }
+    .hero-title em { font-style: italic; color: var(--teal); }
+    .hero-desc {
+      font-size: 1.08rem; color: rgba(255,255,255,0.68);
+      line-height: 1.72; max-width: 580px; margin: 0 auto 44px;
+    }
+    .hero-actions { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--teal) 0%, var(--teal-dark) 100%);
+      color: var(--navy); font-family: 'DM Sans', sans-serif; font-size: 0.97rem;
+      font-weight: 700; padding: 15px 34px; border-radius: 50px; border: none;
+      cursor: pointer; transition: all 0.25s; box-shadow: 0 4px 24px rgba(0,201,167,0.35);
+      display: inline-flex; align-items: center; gap: 9px;
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,201,167,0.45); }
+    .btn-secondary {
+      background: rgba(255,255,255,0.08); color: var(--white);
+      font-family: 'DM Sans', sans-serif; font-size: 0.97rem; font-weight: 600;
+      padding: 15px 34px; border-radius: 50px; border: 1px solid rgba(255,255,255,0.22);
+      cursor: pointer; transition: all 0.25s; display: inline-flex; align-items: center; gap: 9px;
+      backdrop-filter: blur(8px);
+    }
+    .btn-secondary:hover { background: rgba(255,255,255,0.14); transform: translateY(-2px); }
+
+    /* Stats row */
+    .stats-strip {
+      background: var(--white); padding: 40px;
+      border-bottom: 1px solid var(--border);
+    }
+    .stats-inner {
+      max-width: 900px; margin: 0 auto;
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
+    }
+    .stat-item { text-align: center; }
+    .stat-num {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.1rem; font-weight: 700; color: var(--navy);
+    }
+    .stat-num span { color: var(--teal); }
+    .stat-label { font-size: 0.85rem; color: var(--text-muted); margin-top: 4px; font-weight: 500; }
+
+    /* Features */
+    .section { padding: 72px 40px; max-width: 1100px; margin: 0 auto; }
+    .section-label {
+      font-size: 0.8rem; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--teal-dark); margin-bottom: 12px;
+    }
+    .section-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1.7rem, 3vw, 2.4rem); font-weight: 700; color: var(--navy);
+      margin-bottom: 48px;
+    }
+    .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
+    .feat-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 32px;
+      transition: all 0.25s; box-shadow: var(--shadow);
+    }
+    .feat-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); border-color: rgba(0,201,167,0.3); }
+    .feat-icon {
+      width: 52px; height: 52px; border-radius: 14px;
+      background: linear-gradient(135deg, var(--teal-glow), rgba(79,195,247,0.12));
+      border: 1px solid rgba(0,201,167,0.25);
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 20px;
+    }
+    .feat-icon svg { width: 26px; height: 26px; stroke: var(--teal-dark); fill: none; stroke-width: 1.8; }
+    .feat-title { font-size: 1.05rem; font-weight: 700; color: var(--navy); margin-bottom: 10px; }
+    .feat-desc { font-size: 0.9rem; color: var(--text-muted); line-height: 1.65; }
+
+    /* ───── PREDICTION PAGE ───── */
+    #page-predict { padding-top: 80px; padding-bottom: 60px; }
+    .predict-wrap { max-width: 860px; margin: 0 auto; padding: 0 24px; }
+    .predict-header { margin-bottom: 36px; }
+    .predict-header h1 { font-family: 'Playfair Display', serif; font-size: 2rem; color: var(--navy); margin-bottom: 8px; }
+    .predict-header p { color: var(--text-muted); font-size: 0.95rem; line-height: 1.6; }
+
+    .form-card {
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: 20px; padding: 40px; box-shadow: var(--shadow);
+    }
+
+    .form-section-title {
+      font-size: 0.78rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.1em; color: var(--teal-dark);
+      padding-bottom: 12px; border-bottom: 2px solid var(--teal-glow);
+      margin-bottom: 24px; margin-top: 36px;
+    }
+    .form-section-title:first-child { margin-top: 0; }
+
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .form-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+    .form-grid.cols-1 { grid-template-columns: 1fr; }
+
+    .field { display: flex; flex-direction: column; gap: 7px; }
+    .field label {
+      font-size: 0.82rem; font-weight: 600; color: var(--navy);
+      display: flex; align-items: center; gap: 6px;
+    }
+    .field label .hint {
+      font-weight: 400; color: var(--text-muted); font-size: 0.75rem;
+    }
+    .field input, .field select {
+      height: 46px; padding: 0 14px;
+      border: 1.5px solid var(--border); border-radius: 10px;
+      font-family: 'DM Sans', sans-serif; font-size: 0.9rem; color: var(--text);
+      background: var(--off-white); transition: all 0.2s; outline: none; width: 100%;
+    }
+    .field input::placeholder { color: #b0bec5; }
+    .field input:focus, .field select:focus {
+      border-color: var(--teal); background: var(--white);
+      box-shadow: 0 0 0 3px rgba(0,201,167,0.12);
+    }
+    .field select { cursor: pointer; appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 14px center;
+      padding-right: 36px;
+    }
+
+    /* Toggle (yes/no) */
+    .toggle-group { display: flex; gap: 10px; }
+    .toggle-btn {
+      flex: 1; height: 44px; border-radius: 10px; border: 1.5px solid var(--border);
+      background: var(--off-white); font-family: 'DM Sans', sans-serif;
+      font-size: 0.88rem; font-weight: 600; color: var(--text-muted);
+      cursor: pointer; transition: all 0.2s;
+    }
+    .toggle-btn:hover { border-color: var(--teal); color: var(--teal-dark); }
+    .toggle-btn.selected {
+      border-color: var(--teal); background: var(--teal-glow);
+      color: var(--teal-dark);
+    }
+
+    /* Credit score range */
+    .range-wrap { position: relative; }
+    .range-labels { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted); margin-top: 6px; }
+    input[type="range"] {
+      width: 100%; height: 6px; appearance: none; background: var(--border); border-radius: 10px; outline: none; cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      appearance: none; width: 20px; height: 20px; background: var(--teal);
+      border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,201,167,0.4); cursor: pointer;
+    }
+    .range-value {
+      font-size: 0.95rem; font-weight: 700; color: var(--teal-dark);
+      background: var(--teal-glow); border: 1px solid rgba(0,201,167,0.3);
+      padding: 2px 10px; border-radius: 20px; display: inline-block; margin-left: 8px;
+    }
+
+    .submit-row { margin-top: 36px; text-align: center; }
+    .btn-submit {
+      background: linear-gradient(135deg, var(--navy-soft) 0%, var(--navy) 100%);
+      color: var(--white); font-family: 'DM Sans', sans-serif; font-size: 1rem;
+      font-weight: 700; padding: 17px 52px; border-radius: 50px; border: none;
+      cursor: pointer; transition: all 0.25s;
+      box-shadow: 0 4px 24px rgba(10,22,40,0.3);
+      display: inline-flex; align-items: center; gap: 10px;
+    }
+    .btn-submit:hover { transform: translateY(-3px); box-shadow: 0 10px 36px rgba(10,22,40,0.38); }
+    .btn-submit svg { width: 18px; height: 18px; stroke: var(--teal); fill: none; stroke-width: 2; }
+
+    /* Result */
+    .result-card {
+      margin-top: 28px; padding: 32px; border-radius: 16px;
+      display: none; animation: fadeUp 0.4s ease forwards;
+      text-align: center;
+    }
+    .result-card.approved {
+      background: linear-gradient(135deg, rgba(0,201,167,0.08) 0%, rgba(0,201,167,0.04) 100%);
+      border: 2px solid var(--approved);
+    }
+    .result-card.rejected {
+      background: linear-gradient(135deg, rgba(239,68,68,0.08) 0%, rgba(239,68,68,0.03) 100%);
+      border: 2px solid var(--rejected);
+    }
+    .result-icon {
+      width: 68px; height: 68px; border-radius: 50%; margin: 0 auto 18px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .result-card.approved .result-icon { background: rgba(0,201,167,0.15); }
+    .result-card.rejected .result-icon { background: rgba(239,68,68,0.12); }
+    .result-icon svg { width: 34px; height: 34px; stroke-width: 2.5; fill: none; }
+    .result-card.approved .result-icon svg { stroke: var(--approved); }
+    .result-card.rejected .result-icon svg { stroke: var(--rejected); }
+    .result-title { font-family: 'Playfair Display', serif; font-size: 1.7rem; font-weight: 700; margin-bottom: 8px; }
+    .result-card.approved .result-title { color: var(--teal-dark); }
+    .result-card.rejected .result-title { color: var(--rejected); }
+    .result-note { font-size: 0.88rem; color: var(--text-muted); line-height: 1.6; max-width: 420px; margin: 0 auto; }
+    .result-score-row { display: flex; gap: 16px; justify-content: center; margin-top: 20px; flex-wrap: wrap; }
+    .score-pill {
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: 30px; padding: 8px 18px; font-size: 0.82rem;
+      color: var(--text-muted); font-weight: 500;
+    }
+    .score-pill strong { color: var(--navy); font-weight: 700; }
+
+    /* ───── PROFILE PAGE ───── */
+    #page-profile { padding-top: 80px; padding-bottom: 60px; }
+    .profile-wrap { max-width: 760px; margin: 0 auto; padding: 0 24px; }
+
+    .profile-hero {
+      background: linear-gradient(135deg, var(--navy) 0%, var(--navy-mid) 100%);
+      border-radius: 20px; padding: 44px;
+      display: flex; align-items: center; gap: 32px;
+      margin-bottom: 28px; position: relative; overflow: hidden;
+    }
+    .profile-hero::after {
+      content: ''; position: absolute; right: -40px; top: -40px;
+      width: 240px; height: 240px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(0,201,167,0.12) 0%, transparent 70%);
+    }
+    .avatar {
+      width: 88px; height: 88px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--teal), var(--sky));
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700;
+      color: var(--navy); flex-shrink: 0; border: 3px solid rgba(255,255,255,0.2);
+    }
+    .profile-meta { z-index: 1; }
+    .profile-meta h2 { font-family: 'Playfair Display', serif; font-size: 1.7rem; color: var(--white); margin-bottom: 6px; }
+    .profile-meta p { font-size: 0.88rem; color: rgba(255,255,255,0.58); margin-bottom: 14px; }
+    .profile-tag {
+      display: inline-flex; align-items: center; gap: 7px;
+      background: rgba(0,201,167,0.18); border: 1px solid rgba(0,201,167,0.35);
+      color: var(--teal); font-size: 0.78rem; font-weight: 700;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      padding: 5px 14px; border-radius: 30px;
+    }
+
+    .profile-edit-row { display: flex; gap: 14px; margin-bottom: 28px; }
+    .profile-input-wrap { flex: 1; }
+    .profile-input-wrap label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--navy); margin-bottom: 6px; }
+    .profile-input-wrap input {
+      width: 100%; height: 46px; padding: 0 14px;
+      border: 1.5px solid var(--border); border-radius: 10px;
+      font-family: 'DM Sans', sans-serif; font-size: 0.92rem; color: var(--text);
+      background: var(--off-white); transition: all 0.2s; outline: none;
+    }
+    .profile-input-wrap input:focus {
+      border-color: var(--teal); background: var(--white);
+      box-shadow: 0 0 0 3px rgba(0,201,167,0.12);
+    }
+    .btn-save {
+      align-self: flex-end; height: 46px; padding: 0 26px;
+      background: linear-gradient(135deg, var(--teal) 0%, var(--teal-dark) 100%);
+      color: var(--navy); font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 700;
+      border: none; border-radius: 10px; cursor: pointer; transition: all 0.2s;
+    }
+    .btn-save:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,201,167,0.35); }
+
+    .info-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .info-card {
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 28px; box-shadow: var(--shadow);
+    }
+    .info-card-head {
+      display: flex; align-items: center; gap: 12px; margin-bottom: 18px;
+    }
+    .info-card-icon {
+      width: 40px; height: 40px; border-radius: 10px;
+      background: var(--teal-glow); border: 1px solid rgba(0,201,167,0.25);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .info-card-icon svg { width: 20px; height: 20px; stroke: var(--teal-dark); fill: none; stroke-width: 1.8; }
+    .info-card-title { font-size: 0.92rem; font-weight: 700; color: var(--navy); }
+    .info-card p { font-size: 0.87rem; color: var(--text-muted); line-height: 1.68; }
+
+    /* Full-width profile card */
+    .info-card.full { grid-column: 1 / -1; }
+
+    .disclaimer-box {
+      background: rgba(245,158,11,0.07); border: 1px solid rgba(245,158,11,0.3);
+      border-radius: var(--radius); padding: 20px 24px; margin-top: 20px;
+      display: flex; gap: 14px; align-items: flex-start;
+    }
+    .disclaimer-box svg { width: 22px; height: 22px; stroke: var(--warn); fill: none; stroke-width: 2; flex-shrink: 0; margin-top: 2px; }
+    .disclaimer-box p { font-size: 0.84rem; color: #92400e; line-height: 1.65; }
+
+    /* ───── FOOTER ───── */
+    footer {
+      background: var(--navy); color: rgba(255,255,255,0.45);
+      text-align: center; padding: 24px; font-size: 0.82rem;
+      letter-spacing: 0.02em;
+    }
+    footer span { color: var(--teal); }
+
+    /* ───── RESPONSIVE ───── */
+    @media (max-width: 700px) {
+      nav { padding: 0 18px; }
+      .form-grid { grid-template-columns: 1fr; }
+      .form-grid.cols-3 { grid-template-columns: 1fr; }
+      .stats-inner { grid-template-columns: 1fr; }
+      .profile-hero { flex-direction: column; text-align: center; padding: 32px 24px; }
+      .profile-edit-row { flex-direction: column; }
+      .btn-save { width: 100%; justify-content: center; }
+      .info-cards { grid-template-columns: 1fr; }
+      .form-card { padding: 24px 18px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">
+    <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="28" height="28" rx="7" fill="#0a1628"/>
+      <path d="M7 18l5-6 4 4 5-7" stroke="#00c9a7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="21" cy="9" r="2" fill="#00c9a7"/>
+    </svg>
+    Loan<span class="logo-dot">IQ</span>
+  </div>
+  <div class="nav-links">
+    <button class="nav-btn active" onclick="showPage('home', this)">Home</button>
+    <button class="nav-btn" onclick="showPage('predict', this)">Check Eligibility</button>
+
+  </div>
+</nav>
+
+<!-- ═══════════ HOME PAGE ═══════════ -->
+<div id="page-home" class="page active">
+  <div class="hero">
+    <div class="hero-grid"></div>
+    <div class="hero-circle-1"></div>
+    <div class="hero-circle-2"></div>
+    <div class="hero-content">
+      <h1 class="hero-title">
+        Loan Approval<br><em>Prediction System</em>
+      </h1>
+      <p class="hero-desc">
+        Submit your financial profile and receive an instant, data-driven prediction of your loan approval likelihood — powered by machine learning and built for transparency.
+      </p>
+      <div class="hero-actions">
+        <button class="btn-primary" onclick="showPage('predict', document.querySelectorAll('.nav-btn')[1])">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          Check Loan Eligibility
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="stats-strip">
+    <div class="stats-inner">
+      <div class="stat-item">
+        <div class="stat-num">17<span>+</span></div>
+        <div class="stat-label">Prediction Factors Analyzed</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">300<span>–</span>900</div>
+        <div class="stat-label">Credit Score Range Supported</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">&lt;2<span>s</span></div>
+        <div class="stat-label">Instant Eligibility Result</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════ PREDICT PAGE ═══════════ -->
+<div id="page-predict" class="page">
+  <div class="predict-wrap">
+    <div class="predict-header">
+      <h1>Check Loan Eligibility</h1>
+      <p>Complete the form below with your financial details. All fields are required. Prediction is generated instantly based on the entered parameters.</p>
+    </div>
+
+    <div class="form-card">
+      <!-- ── Personal Information ── -->
+      <div class="form-section-title">Personal Information</div>
+      <div class="form-grid">
+        <div class="field">
+          <label>Age <span class="hint">(years)</span></label>
+          <input type="number" id="age" placeholder="e.g. 32" min="18" max="75" />
+        </div>
+        <div class="field">
+          <label>Marital Status</label>
+          <select id="marital">
+            <option value="">Select status...</option>
+            <option value="married">Married</option>
+            <option value="single">Single</option>
+            <option value="divorced">Divorced</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Education Level</label>
+          <select id="education">
+            <option value="">Select education...</option>
+            <option value="high_school">High School</option>
+            <option value="bachelor">Bachelor's</option>
+            <option value="master">Master's</option>
+            <option value="phd">PhD</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Employment Type</label>
+          <select id="employment">
+            <option value="">Select type...</option>
+            <option value="full_time">Full-time</option>
+            <option value="part_time">Part-time</option>
+            <option value="self_employed">Self-employed</option>
+            <option value="unemployed">Unemployed</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- ── Financial Profile ── -->
+      <div class="form-section-title">Financial Profile</div>
+      <div class="form-grid">
+        <div class="field">
+          <label>Monthly Income <span class="hint">(₹ or local currency)</span></label>
+          <input type="number" id="income" placeholder="e.g. 65000" min="0" />
+        </div>
+        <div class="field">
+          <label>Months Employed</label>
+          <input type="number" id="months_employed" placeholder="e.g. 36" min="0" />
+        </div>
+      </div>
+
+      <div class="form-grid cols-1" style="margin-top:20px;">
+        <div class="field">
+          <label>Credit Score <span class="hint">(300–900)</span>
+            <span class="range-value" id="credit-display">600</span>
+          </label>
+          <input type="range" id="credit_score" min="300" max="900" value="600" oninput="document.getElementById('credit-display').textContent=this.value; updateCreditColor(this.value)" />
+          <div class="range-labels"><span>300 — Poor</span><span>600 — Fair</span><span>900 — Excellent</span></div>
+        </div>
+      </div>
+
+      <!-- ── Loan Details ── -->
+      <div class="form-section-title">Loan Details</div>
+      <div class="form-grid cols-3">
+        <div class="field">
+          <label>Loan Amount</label>
+          <input type="number" id="loan_amount" placeholder="e.g. 500000" min="0" />
+        </div>
+        <div class="field">
+          <label>Interest Rate <span class="hint">(%)</span></label>
+          <input type="number" id="interest_rate" placeholder="e.g. 8.5" min="0" max="50" step="0.1" />
+        </div>
+        <div class="field">
+          <label>Loan Term <span class="hint">(months)</span></label>
+          <input type="number" id="loan_term" placeholder="e.g. 60" min="1" />
+        </div>
+      </div>
+
+      <div class="form-grid" style="margin-top:20px;">
+        <div class="field">
+          <label>Loan Purpose</label>
+          <select id="loan_purpose">
+            <option value="">Select purpose...</option>
+            <option value="home">Home</option>
+            <option value="auto">Auto</option>
+            <option value="education">Education</option>
+            <option value="business">Business</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="field">
+          <!-- spacer --> &nbsp;
+        </div>
+      </div>
+
+      <!-- ── Additional Flags ── -->
+      <div class="form-section-title">Additional Factors</div>
+      <div class="form-grid cols-3">
+        <div class="field">
+          <label>Has Mortgage?</label>
+          <div class="toggle-group" id="toggle-mortgage">
+            <button class="toggle-btn" onclick="selectToggle('toggle-mortgage','yes')">Yes</button>
+            <button class="toggle-btn" onclick="selectToggle('toggle-mortgage','no')">No</button>
+          </div>
+        </div>
+        <div class="field">
+          <label>Has Dependents?</label>
+          <div class="toggle-group" id="toggle-dependents">
+            <button class="toggle-btn" onclick="selectToggle('toggle-dependents','yes')">Yes</button>
+            <button class="toggle-btn" onclick="selectToggle('toggle-dependents','no')">No</button>
+          </div>
+        </div>
+        <div class="field">
+          <label>Has Co-signer?</label>
+          <div class="toggle-group" id="toggle-cosigner">
+            <button class="toggle-btn" onclick="selectToggle('toggle-cosigner','yes')">Yes</button>
+            <button class="toggle-btn" onclick="selectToggle('toggle-cosigner','no')">No</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Submit -->
+      <div class="submit-row">
+        <button class="btn-submit" onclick="predictLoan()">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 12l2 2 4-4"/></svg>
+          Predict Loan Status
+        </button>
+      </div>
+
+      <!-- Result -->
+      <div class="result-card" id="result-card">
+        <div class="result-icon" id="result-icon">
+          <svg id="result-svg" viewBox="0 0 24 24"></svg>
+        </div>
+        <div class="result-title" id="result-title">–</div>
+        <div class="result-note" id="result-note">–</div>
+        <div class="result-score-row" id="result-score-row"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  &copy; 2026 <span>LoanIQ</span> — Loan Approval Prediction System &nbsp;·&nbsp; Academic Research Tool &nbsp;·&nbsp; Not a licensed financial service
+</footer>
+
+<script>
+  // ── Page Navigation ──
+  function showPage(id, btn) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('page-' + id).classList.add('active');
+    if (btn) btn.classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // ── Toggle (Yes/No) ──
+  const toggleState = {};
+  function selectToggle(groupId, val) {
+    toggleState[groupId] = val;
+    const btns = document.querySelectorAll(`#${groupId} .toggle-btn`);
+    btns.forEach(b => {
+      b.classList.toggle('selected', b.textContent.toLowerCase() === val);
+    });
+  }
+
+  // ── Credit Score Color ──
+  function updateCreditColor(val) {
+    const el = document.getElementById('credit-display');
+    if (val < 500) el.style.color = '#ef4444';
+    else if (val < 650) el.style.color = '#f59e0b';
+    else if (val < 750) el.style.color = '#3b82f6';
+    else el.style.color = '#00a88a';
+  }
+
+  // ── Prediction Logic ──
+  function predictLoan() {
+    // Collect values
+    const age = parseInt(document.getElementById('age').value);
+    const income = parseFloat(document.getElementById('income').value);
+    const loanAmount = parseFloat(document.getElementById('loan_amount').value);
+    const creditScore = parseInt(document.getElementById('credit_score').value);
+    const monthsEmployed = parseInt(document.getElementById('months_employed').value);
+    const interestRate = parseFloat(document.getElementById('interest_rate').value);
+    const loanTerm = parseInt(document.getElementById('loan_term').value);
+    const education = document.getElementById('education').value;
+    const employment = document.getElementById('employment').value;
+    const marital = document.getElementById('marital').value;
+    const purpose = document.getElementById('loan_purpose').value;
+    const hasMortgage = toggleState['toggle-mortgage'] || '';
+    const hasDependents = toggleState['toggle-dependents'] || '';
+    const hasCosigner = toggleState['toggle-cosigner'] || '';
+
+    // Basic validation
+    const missing = [];
+    if (!age || isNaN(age)) missing.push('Age');
+    if (!income || isNaN(income)) missing.push('Monthly Income');
+    if (!loanAmount || isNaN(loanAmount)) missing.push('Loan Amount');
+    if (!monthsEmployed && monthsEmployed !== 0) missing.push('Months Employed');
+    if (!interestRate || isNaN(interestRate)) missing.push('Interest Rate');
+    if (!loanTerm || isNaN(loanTerm)) missing.push('Loan Term');
+    if (!education) missing.push('Education');
+    if (!employment) missing.push('Employment Type');
+    if (!marital) missing.push('Marital Status');
+    if (!purpose) missing.push('Loan Purpose');
+    if (!hasMortgage) missing.push('Has Mortgage');
+    if (!hasDependents) missing.push('Has Dependents');
+    if (!hasCosigner) missing.push('Has Co-signer');
+
+    if (missing.length > 0) {
+      alert('Please fill in the following fields:\n• ' + missing.join('\n• '));
+      return;
+    }
+
+    // ── Heuristic ML placeholder ──
+    // This simulates a model. Replace with real API call:
+    // const res = await fetch('/api/predict', { method:'POST', body: JSON.stringify(payload) });
+    let score = 0;
+
+    // Credit score factor (heavy weight)
+    if (creditScore >= 750) score += 35;
+    else if (creditScore >= 650) score += 20;
+    else if (creditScore >= 550) score += 8;
+    else score -= 15;
+
+    // Income to loan ratio
+    const dti = loanAmount / (income * loanTerm); // rough DTI proxy
+    if (dti < 0.5) score += 20;
+    else if (dti < 1) score += 10;
+    else if (dti < 2) score += 0;
+    else score -= 10;
+
+    // Employment
+    if (employment === 'full_time') score += 15;
+    else if (employment === 'self_employed') score += 7;
+    else if (employment === 'part_time') score += 3;
+    else score -= 10;  // unemployed
+
+    // Education
+    if (education === 'phd') score += 8;
+    else if (education === 'master') score += 6;
+    else if (education === 'bachelor') score += 4;
+    else score += 1;
+
+    // Co-signer is positive
+    if (hasCosigner === 'yes') score += 10;
+
+    // Dependents slightly negative
+    if (hasDependents === 'yes') score -= 5;
+
+    // Months employed stability
+    if (monthsEmployed >= 48) score += 10;
+    else if (monthsEmployed >= 24) score += 5;
+    else if (monthsEmployed < 6) score -= 5;
+
+    // Interest rate (high rate = riskier deal)
+    if (interestRate <= 7) score += 5;
+    else if (interestRate >= 18) score -= 5;
+
+    // Marital stability (minor factor)
+    if (marital === 'married') score += 4;
+
+    // Mortgage means existing obligation
+    if (hasMortgage === 'yes') score -= 4;
+
+    const approved = score >= 40;
+
+    // Build payload (for future backend)
+    const payload = {
+      age, income, loanAmount, creditScore, monthsEmployed,
+      interestRate, loanTerm, education, employment, marital,
+      purpose, hasMortgage, hasDependents, hasCosigner
+    };
+    console.log('Prediction payload:', payload, '| Score:', score);
+
+    // Show result
+    const card = document.getElementById('result-card');
+    const title = document.getElementById('result-title');
+    const note = document.getElementById('result-note');
+    const icon = document.getElementById('result-icon');
+    const svg = document.getElementById('result-svg');
+    const row = document.getElementById('result-score-row');
+
+    card.className = 'result-card ' + (approved ? 'approved' : 'rejected');
+    card.style.display = 'block';
+
+    if (approved) {
+      title.textContent = '✓ Loan Approved';
+      note.textContent = 'Based on the provided financial profile, this application meets the predicted approval criteria. Estimated confidence is strong. Proceed to submit with your bank for formal assessment.';
+      svg.innerHTML = '<path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>';
+    } else {
+      title.textContent = '✗ Loan Rejected';
+      note.textContent = 'Based on the provided profile, this application does not meet the predicted approval threshold. Consider improving your credit score, reducing the loan amount, or adding a co-signer before reapplying.';
+      svg.innerHTML = '<path d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>';
+    }
+
+    const dtiDisplay = ((loanAmount / income) * 100).toFixed(1);
+    row.innerHTML = `
+      <div class="score-pill">Credit Score: <strong>${creditScore}</strong></div>
+      <div class="score-pill">Loan-to-Income: <strong>${dtiDisplay}%</strong></div>
+      <div class="score-pill">Employment: <strong>${employment.replace('_',' ')}</strong></div>
+      <div class="score-pill">Co-signer: <strong>${hasCosigner}</strong></div>
+    `;
+
+    card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+
+</script>
+</body>
+</html>
